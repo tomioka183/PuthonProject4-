@@ -1,7 +1,7 @@
 from src.processing import filter_by_state, sort_by_date
 
 
-def test_filter_by_state(sample_data):
+def test_filter_by_state(sample_data) -> None:
     result = filter_by_state(sample_data, "EXECUTED")
     assert len(result) == 2
     assert result[0]["id"] == 1
