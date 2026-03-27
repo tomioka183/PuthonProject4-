@@ -37,8 +37,8 @@ def test_transaction_descriptions(sample_transactions):
 ])
 def test_card_number_generator(start, stop, expected):
     """Параметризованный тест генератора номеров карт."""
-    gen = card_number_generator(start, stop)
-    assert list(gen) == expected
+    result = card_number_generator(start, stop)
+    assert list(result) == expected
 
     import pytest
 
