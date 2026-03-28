@@ -1,7 +1,12 @@
+
 import functools
 from typing import Any, Callable, Optional
 
 def log(filename: Optional[str] = None) -> Callable:
+    """
+    Декоратор, который логирует начало и конец выполнения функции,
+    а также ее результаты или возникшие ошибки.
+    """
     def wrapper(func: Callable) -> Callable:
         @functools.wraps(func)
         def inner(*args: Any, **kwargs: Any) -> Any:
@@ -18,6 +23,9 @@ def log(filename: Optional[str] = None) -> Callable:
     return wrapper
 
 def write_log(message: str, filename: Optional[str]) -> None:
+    """
+    Вспомогательная функция для записи лога в файл или вывода в консоль.
+    """
     if filename:
         with open(filename, "a", encoding="utf-8") as f:
             f.write(message + "\n")
