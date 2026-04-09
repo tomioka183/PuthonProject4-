@@ -1,0 +1,33 @@
+import os
+
+import requests
+from dotenv import load_dotenv
+
+# Подгружаем секретный ключ из файла .env
+load_dotenv()
+API_KEY = os.getenv("API_KEY")
+
+
+def convert_to_rub(transaction: dict) -> float:
+    """Извлекает сумму транзакции и переводит в рубли, если она в USD или EUR."""
+    # Достаем сумму
+    amount = float(transaction.get("operationAmount", {}).get("amount", 0))
+    # Достаем код валюты
+    currency = transaction.get("operationAmount", {}).get("currency", {}).get("code", "RUB")
+
+    # Если уже рубли — конвертация не нужна
+    if currency == "RUB":
+        return amount
+
+    # Стучимся в API за курсом
+    url = f"https://api.apilayer.com/exchangerates_data/convert?to=RUB&from={currency}&amount={amount}"
+    headers = {"apikey": API_KEY}
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        return float(data.get("result", 0.0))
+    except Exception:
+        # Если что-то пошло не так (нет интернета или ключ сдох)
+        return 0.0
