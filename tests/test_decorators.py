@@ -1,4 +1,8 @@
+import pytest
 # Тест 1: Успешное выполнение функции и вывод в консоль
+from src.decorators import log
+
+
 def test_log_console_ok(capsys):
     @log()
     def test_func(x, y):

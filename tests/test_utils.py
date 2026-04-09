@@ -1,6 +1,8 @@
 import json
-from unittest.mock import patch, mock_open
+from unittest.mock import mock_open, patch
+
 from src.utils import read_json
+
 
 @patch("os.path.exists")
 def test_read_json_success(mock_exists):

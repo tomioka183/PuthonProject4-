@@ -2,6 +2,7 @@ import json
 import os
 from typing import Any
 
+
 def read_json(path: str) -> list[dict[str, Any]]:
     """Читает JSON-файл. Если файл пустой, не найден или не список — возвращает []"""
     if not os.path.exists(path):

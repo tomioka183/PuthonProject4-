@@ -1,10 +1,12 @@
 import os
+
 import requests
 from dotenv import load_dotenv
 
 # Подгружаем секретный ключ из файла .env
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
+
 
 def convert_to_rub(transaction: dict) -> float:
     """Извлекает сумму транзакции и переводит в рубли, если она в USD или EUR."""
