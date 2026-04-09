@@ -1,8 +1,3 @@
-import pytest
-import os
-from src.decorators import log
-
-
 # Тест 1: Успешное выполнение функции и вывод в консоль
 def test_log_console_ok(capsys):
     @log()
