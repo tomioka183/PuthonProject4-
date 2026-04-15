@@ -1,15 +1,30 @@
 import json
+import logging
 import os
 from typing import Any
 
+logger = logging.getLogger("utils")
+logger.setLevel(logging.DEBUG)
+file_handler = logging.FileHandler("logs/utils.log", mode="w", encoding="utf-8")
+file_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+file_handler.setFormatter(file_formatter)
+logger.addHandler(file_handler)
+
 
 def read_json(path: str) -> list[dict[str, Any]]:
-    """Читает JSON-файл. Если файл пустой, не найден или не список — возвращает []"""
+    """Читает JSON-файл. Логирует попытку, успех и ошибки."""
+    logger.debug(f"Попытка прочитать файл: {path}")
     if not os.path.exists(path):
+        logger.error(f"Файл не найден по пути: {path}")
         return []
     try:
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
-            return data if isinstance(data, list) else []
-    except (json.JSONDecodeError, Exception):
+            logger.info(f"Файл {path} успешно прочитан. Найдено {len(data)} записей.")
+            return data
+    except json.JSONDecodeError:
+        logger.error(f"Ошибка декодирования JSON в файле: {path}")
+        return []
+    except Exception as e:
+        logger.error(f"Неизвестная ошибка при чтении файла {path}: {e}")
         return []
