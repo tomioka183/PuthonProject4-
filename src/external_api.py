@@ -1,8 +1,8 @@
+import logging
 import os
 
 import requests
 from dotenv import load_dotenv
-import logging
 
 logger = logging.getLogger('external_api')
 logger.setLevel(logging.DEBUG)
@@ -23,8 +23,6 @@ def convert_to_rub(transaction: dict) -> float:
     """
 
     logger.debug(f"Начало конвертации для транзакции: {transaction.get('id', 'без ID')}")
-
-
     amount = float(transaction.get("operationAmount", {}).get("amount", 0))
     # Достаем код валюты
     currency = transaction.get("operationAmount", {}).get("currency", {}).get("code", "RUB")
@@ -34,11 +32,9 @@ def convert_to_rub(transaction: dict) -> float:
         logger.info(f"Транзакция {transaction.get('id', 'без ID')} уже в RUB. Сумма: {amount}")
         return amount
 
-
     logger.debug(f"Запрос к API для конвертации {amount} {currency} в RUB")
     url = f"https://api.apilayer.com/exchangerates_data/convert?to=RUB&from={currency}&amount={amount}"
     headers = {"apikey": API_KEY}
-
     try:
         response = requests.get(url, headers=headers, timeout=5)
         response.raise_for_status()
