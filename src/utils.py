@@ -1,30 +1,40 @@
-import json
-import logging
+import pandas as pd
 import os
-from typing import Any
-
-logger = logging.getLogger("utils")
-logger.setLevel(logging.DEBUG)
-file_handler = logging.FileHandler("logs/utils.log", mode="w", encoding="utf-8")
-file_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-file_handler.setFormatter(file_formatter)
-logger.addHandler(file_handler)
+from typing import List, Dict
 
 
-def read_json(path: str) -> list[dict[str, Any]]:
-    """Читает JSON-файл. Логирует попытку, успех и ошибки."""
-    logger.debug(f"Попытка прочитать файл: {path}")
-    if not os.path.exists(path):
-        logger.error(f"Файл не найден по пути: {path}")
+def read_financial_transactions_csv(file_path: str) -> List[Dict]:
+    """
+    Считывает финансовые операции из CSV-файла и возвращает список словарей.
+    Если файл не найден или произошла ошибка, возвращает пустой список.
+    """
+    if not os.path.exists(file_path):
         return []
+
     try:
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            logger.info(f"Файл {path} успешно прочитан. Найдено {len(data)} записей.")
-            return data
-    except json.JSONDecodeError:
-        logger.error(f"Ошибка декодирования JSON в файле: {path}")
+        df = pd.read_csv(file_path, delimiter=';')
+
+        if df.empty:
+            return []
+
+        return df.to_dict(orient='records')
+    except Exception:
         return []
-    except Exception as e:
-        logger.error(f"Неизвестная ошибка при чтении файла {path}: {e}")
+
+
+def read_financial_transactions_excel(file_path: str) -> List[Dict]:
+    """
+    Считывает финансовые операции из Excel-файла (.xlsx) и возвращает список словарей.
+    """
+    if not os.path.exists(file_path):
+        return []
+
+    try:
+        df = pd.read_excel(file_path)
+
+        if df.empty:
+            return []
+
+        return df.to_dict(orient='records')
+    except Exception:
         return []
