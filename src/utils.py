@@ -1,15 +1,41 @@
-import json
 import os
-from typing import Any
+from typing import Dict, List
+
+import pandas as pd
 
 
-def read_json(path: str) -> list[dict[str, Any]]:
-    """Читает JSON-файл. Если файл пустой, не найден или не список — возвращает []"""
-    if not os.path.exists(path):
+def read_financial_transactions_csv(file_path: str) -> List[Dict]:
+    """
+    Считывает финансовые операции из CSV-файла и возвращает список словарей.
+    Если файл не найден или произошла ошибка, возвращает пустой список.
+    """
+    if not os.path.exists(file_path):
         return []
+
     try:
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            return data if isinstance(data, list) else []
-    except (json.JSONDecodeError, Exception):
+        df = pd.read_csv(file_path, delimiter=';')
+
+        if df.empty:
+            return []
+
+        return df.to_dict(orient='records')
+    except Exception:
+        return []
+
+
+def read_financial_transactions_excel(file_path: str) -> List[Dict]:
+    """
+    Считывает финансовые операции из Excel-файла (.xlsx) и возвращает список словарей.
+    """
+    if not os.path.exists(file_path):
+        return []
+
+    try:
+        df = pd.read_excel(file_path)
+
+        if df.empty:
+            return []
+
+        return df.to_dict(orient='records')
+    except Exception:
         return []
