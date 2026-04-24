@@ -1,7 +1,9 @@
 import json
 from unittest.mock import mock_open, patch
 
-from src.utils import read_json
+
+from src.external_api import read_financial_transactions_json as read_json
+
 
 
 @patch("os.path.exists")
