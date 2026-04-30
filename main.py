@@ -1,9 +1,9 @@
-from src.external_api import read_financial_transactions_json
-from src.utils import (read_financial_transactions_csv,
-                       read_financial_transactions_excel,
-                       search_by_description)
-from src.processing import filter_by_state, sort_by_date
-from src.masks import get_mask_card_number, get_mask_account
+import os
+
+from src.processing import filter_by_state, process_bank_search, sort_by_date
+# Импортируем твои функции из папки src
+from src.utils import read_financial_transactions_json
+from src.widget import get_date, mask_account_card  # функции маскировки и даты
 
 
 def main():
@@ -13,66 +13,87 @@ def main():
     print("2. Получить информацию о транзакциях из CSV-файла")
     print("3. Получить информацию о транзакциях из XLSX-файла")
 
-    choice = input("Пользователь: ")
+    choice = input("\nПользователь: ")
 
-    if choice == '1':
-        print("Для обработки выбран JSON-файл.")
-        transactions = read_financial_transactions_json('data/operations.json')
-    elif choice == '2':
-        print("Для обработки выбран CSV-файл.")
-        transactions = read_financial_transactions_csv('data/transactions.csv')
-    elif choice == '3':
-        print("Для обработки выбран XLSX-файл.")
-        transactions = read_financial_transactions_excel('data/transactions_excel.xlsx')
+    # 1. Загрузка данных
+    # ВАЖНО: Убедись, что файл operations.json лежит в папке data
+    file_path = os.path.join("data", "operations.json")
+
+    if choice == "1":
+        print("Программа: Для обработки выбран JSON-файл.")
+        transactions = read_financial_transactions_json(file_path)
+    elif choice in ["2", "3"]:
+        print("Программа: Форматы CSV и XLSX будут доступны в следующих версиях.")
+        return
     else:
-        print("Неверный выбор.")
+        print("Программа: Неверный выбор.")
         return
 
-    # Фильтрация по статусу
-    status = input("\nВведите статус, по которому необходимо выполнить фильтрацию.\n"
-                   "Доступные статусы: EXECUTED, CANCELED, PENDING\n").upper()
+    # 2. Фильтрация по статусу
+    valid_statuses = ["EXECUTED", "CANCELED", "PENDING"]
+    while True:
+        status_input = input(f"\nВведите статус, по которому необходимо выполнить фильтрацию.\n"
+                             f"Доступные для фильтровки статусы: {', '.join(valid_statuses)}\n"
+                             "Пользователь: ").strip().upper()
 
-    if status not in ['EXECUTED', 'CANCELED', 'PENDING']:
-        print(f"Статус {status} недоступен. Вывожу все операции.")
-    else:
-        transactions = filter_by_state(transactions, status)
-        print(f"Операции отфильтрованы по статусу {status}")
+        if status_input in valid_statuses:
+            transactions = filter_by_state(transactions, status_input)
+            print(f'Программа: Операции отфильтрованы по статусу "{status_input}"')
+            break
+        else:
+            print(f'Программа: Статус операции "{status_input}" недоступен.')
 
-    # Сортировка по дате
-    is_sort = input("Отсортировать операции по дате? Да/Нет: ").lower()
-    if is_sort == 'да':
-        is_asc = input("По возрастанию или по убыванию? ").lower()
-        transactions = sort_by_date(transactions, is_asc == 'по возрастанию')
+    # 3. Сортировка по дате
+    is_sort = input("\nОтсортировать операции по дате? Да/Нет\nПользователь: ").lower()
+    if is_sort == "да":
+        order = input("Отсортировать по возрастанию или по убыванию?\nПользователь: ").lower()
+        is_reverse = True if order == "по убыванию" else False
+        transactions = sort_by_date(transactions, is_reverse)
 
-    # Фильтрация по RUB
-    only_rub = input("Выводить только рублевые транзакции? Да/Нет: ").lower()
-    if only_rub == 'да':
-        transactions = [t for t in transactions if
-                        t.get('operationAmount', {}).get('currency', {}).get('code') == 'RUB']
+    # 4. Фильтрация по валюте
+    is_rub = input("\nВыводить только рублевые транзакции? Да/Нет\nПользователь: ").lower()
+    if is_rub == "да":
+        transactions = [
+            t for t in transactions
+            if t.get("operationAmount", {}).get("currency", {}).get("code") == "RUB"
+        ]    # 5. Фильтрация по слову в описании (Регулярные выражения)
+    is_filter_desc = input("\nОтфильтровать список транзакций по определенному слову в описании? Да/Нет\n"
+                           "Пользователь: ").lower()
+    if is_filter_desc == "да":
+        search_query = input("Введите слово для поиска: ")
+        transactions = process_bank_search(transactions, search_query)
 
-    # Поиск по описанию
-    search_query = input("Введите строку для поиска в описании: ")
-    transactions = search_by_description(transactions, search_query)
-
+    # 6. Финальный вывод
     print("\nРаспечатываю итоговый список транзакций...")
+
     if not transactions:
-        print("Не найдено ни одной транзакции, подходящей под ваши условия.")
+        print("Не найдено ни одной транзакции, подходящей под ваши условия фильтрации")
     else:
-        print(f"Всего операций для вывода: {len(transactions)}")
-        for t in transactions:
-            date = t.get('date', 'Нет даты')
-            desc = t.get('description', 'Нет описания')
-            amount = t.get('operationAmount', {}).get('amount', '0')
+        print(f"Всего банковских операций в выборке: {len(transactions)}\n")
 
-            # Маскировка
-            from_info = t.get('from', 'Неизвестно')
-            if 'Счет' in from_info:
-                masked_from = get_mask_account(from_info)
+        for op in transactions:
+            # Превращаем дату в формат 08.12.2019
+            date_formatted = get_date(op.get("date", ""))
+            description = op.get("description", "Без описания")
+
+            # Маскируем номера карт и счетов
+            from_info = op.get("from")
+            to_info = op.get("to", "")
+
+            # Если есть отправитель, маскируем его
+            if from_info:
+                sender = mask_account_card(from_info)
+                receiver = mask_account_card(to_info)
+                route = f"{sender} -> {receiver}"
             else:
-                masked_from = get_mask_card_number(from_info)
+                route = mask_account_card(to_info)
 
-            print(f"{date} | {desc} | {masked_from} | Сумма: {amount}")
+            amount = op.get("operationAmount", {}).get("amount")
+            currency = op.get("operationAmount", {}).get("currency", {}).get("name")
 
+            print(f"{date_formatted} {description}")
+            print(route)
+            print(f"Сумма: {amount} {currency}\n")
 
 if __name__ == "__main__":
     main()

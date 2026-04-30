@@ -1,8 +1,10 @@
-import re
 import os
-import pandas as pd
+import re
 from collections import Counter
-from typing import List, Dict
+from typing import Dict, List
+
+import pandas as pd
+
 
 def read_financial_transactions_csv(file_path: str) -> List[Dict]:
     """Считывает CSV файл."""

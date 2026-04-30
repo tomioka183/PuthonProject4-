@@ -1,5 +1,7 @@
 import pytest
-from src.utils import search_by_description, count_transactions_by_category
+
+from src.utils import count_transactions_by_category, search_by_description
+
 
 def test_search_by_description():
     data = [{"description": "Перевод организации"}, {"description": "Оплата услуг"}]
